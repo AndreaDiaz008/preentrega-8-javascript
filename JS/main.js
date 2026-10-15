@@ -1,13 +1,16 @@
+
 const pedidosIniciales = [
     { id: 1, cliente: "Anahi Perez", modelo: "Snoopy", cantidad: 1, estado: "Pendiente" },
     { id: 2, cliente: "Jose Gonzales", modelo: "Corazones", cantidad: 2, estado: "En producción" }
 ];
 
-let pedidos = JSON.parse(localStorage.getItem("pedidosLlaveros")) ?? pedidosIniciales;
+let pedidos = [];
+
 
 function guardarPedidosEnStorage() {
     localStorage.setItem("pedidosLlaveros", JSON.stringify(pedidos));
 }
+
 
 const contenedorPedidos = document.getElementById('contenedor-pedidos');
 const datosPedidos = document.getElementById('formulario-pedido');
@@ -15,8 +18,8 @@ const inputBusqueda = document.getElementById("input-busqueda");
 const botonTema = document.getElementById("btn-tema");
 const mensajeFeedback = document.getElementById('mensaje-feedback');
 
+
 function mostrarFeedback(texto, tipo) {
-    if (!mensajeFeedback) return;
     mensajeFeedback.textContent = texto;
     mensajeFeedback.className = `mensaje-feedback ${tipo}`;
 
@@ -25,6 +28,7 @@ function mostrarFeedback(texto, tipo) {
         mensajeFeedback.textContent = '';
     }, 3000);
 }
+
 
 function renderizarPedidos(lista) {
     contenedorPedidos.innerHTML = "";
@@ -51,6 +55,7 @@ function renderizarPedidos(lista) {
             <button class="btn-eliminar">Eliminar</button>
         `;
 
+        
         const botonEliminar = tarjeta.querySelector(".btn-eliminar");
         botonEliminar.addEventListener("click", () => {
             pedidos = pedidos.filter(item => item.id !== id);
@@ -59,20 +64,30 @@ function renderizarPedidos(lista) {
             mostrarFeedback(`Pedido de ${cliente} eliminado.`, 'eliminado');
         });
 
+        
         const selectEstado = tarjeta.querySelector(".select-estado");
         selectEstado.addEventListener("change", (e) => {
-            const pedidoAActualizar = pedidos.find(item => item.id === id);
-            if (pedidoAActualizar) {
-                pedidoAActualizar.estado = e.target.value;
-                guardarPedidosEnStorage();
-            }
+            pedido.estado = e.target.value;
+            guardarPedidosEnStorage();
         });
 
         contenedorPedidos.appendChild(tarjeta);
     });
 }
 
-renderizarPedidos(pedidos);
+
+try {
+    const pedidosGuardados = localStorage.getItem("pedidosLlaveros");
+    pedidos = pedidosGuardados ? JSON.parse(pedidosGuardados) : pedidosIniciales;
+} catch (error) {
+    console.error("Error al procesar los datos de localStorage:", error);
+    pedidos = pedidosIniciales;
+    mostrarFeedback("Hubo un problema al cargar los pedidos guardados. Se cargó la lista inicial.", "eliminado");
+} finally {
+    
+    renderizarPedidos(pedidos);
+}
+
 
 datosPedidos.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -97,26 +112,32 @@ datosPedidos.addEventListener('submit', (e) => {
     mostrarFeedback(`¡Pedido de ${nombreCliente} agregado con éxito!`, 'exito');
 });
 
+
 inputBusqueda.addEventListener("input", (e) => {
     const termino = e.target.value.toLowerCase();
     
     const pedidosFiltrados = pedidos.filter(pedido => 
-        pedido?.cliente?.toLowerCase().includes(termino) ||
-        pedido?.modelo?.toLowerCase().includes(termino)
+        pedido.cliente.toLowerCase().includes(termino) ||
+        pedido.modelo.toLowerCase().includes(termino)
     );
     
     renderizarPedidos(pedidosFiltrados);
 });
 
+
 const temaGuardado = localStorage.getItem("tema");
 if (temaGuardado === "dark") {
     document.body.classList.add("dark-mode");
-    if (botonTema) botonTema.textContent = "☀️ Modo Claro";
+    botonTema.textContent = "☀️ Modo Claro";
 }
 
-botonTema?.addEventListener("click", () => {
+botonTema.addEventListener("click", () => {
     const esModoOscuro = document.body.classList.toggle("dark-mode");
-
     botonTema.textContent = esModoOscuro ? "☀️ Modo Claro" : "🌙 Modo Oscuro";
     localStorage.setItem("tema", esModoOscuro ? "dark" : "light");
 });
+
+
+setTimeout(() => {
+    mostrarFeedback(" ¡Promo activa! 10% de descuento en pedidos de más de 5 llaveros.", "exito");
+}, 2500);
